@@ -1,14 +1,7 @@
-// #define LAST_VERSION
-
 #include <amxmodx>
 #include <uac>
 
-#if defined LAST_VERSION
 #include <chatmanager>
-#else
-#define cm_set_prefix(%1,%2) server_cmd("cm_set_prefix #%d ^"%s^"", get_user_userid(%1), %2)
-#define cm_reset_prefix(%1) server_cmd("cm_set_prefix #%d ^"^"", get_user_userid(%1))
-#endif
 
 enum {
 	PREFIX_NONE,
