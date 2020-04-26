@@ -473,6 +473,7 @@ printConsole(id, const msg[]) {
 
 // NATIVES
 public plugin_natives() {
+	register_native("UAC_Reload", "NativeReload", 0);
 	register_native("UAC_Push", "NativePush", 0);
 	register_native("UAC_StartLoad", "NativeStartLoad", 0);
 	register_native("UAC_FinishLoad", "NativeFinishLoad", 0);
@@ -493,9 +494,19 @@ public plugin_natives() {
 	register_native("UAC_GetPlayerExpired", "NativeGetPlayerExpired", 0);
 }
 
-public NativeStartLoad(plugin) {
+public bool:NativeReload() {
 	if (Status == STATUS_LOADED) {
-		return 0;
+		return false;
+	}
+	TrieClear(Privileges);
+	NeedRecheck = true;
+	loadStart();
+	return true;
+}
+
+public bool:NativeStartLoad(plugin) {
+	if (Status == STATUS_LOADED) {
+		return false;
 	}
 
 	LoadStatusList[LoadStatusNum][LoadSource] = plugin;
@@ -505,17 +516,17 @@ public NativeStartLoad(plugin) {
 	new pluginName[64];
 	get_plugin(plugin, .filename = pluginName, .len1 = charsmax(pluginName));
 	log_amx("Module %s start loading privileges", pluginName);
-	return 1;
+	return true;
 }
 
-public NativeFinishLoad(plugin) {
+public bool:NativeFinishLoad(plugin) {
 	if (Status == STATUS_LOADED) {
-		return 0;
+		return false;
 	}
 
 	new status = getLoadStatus(plugin);
 	if (status == -1) {
-		return 0;
+		return false;
 	}
 
 	LoadStatusList[status][LoadLoaded] = true;
@@ -525,17 +536,17 @@ public NativeFinishLoad(plugin) {
 	PluginLoadedNum = 0;
 
 	if (getLoadStatusCount(true) != LoadStatusNum) {
-		return 1;
+		return true;
 	}
 
 	remove_task(TIMEOUT_TASK_ID);
 	loadFinish();
-	return 1;
+	return true;
 }
 
-public NativePush(plugin, argc) {
-	CHECK_NATIVE_ARGS_NUM(argc, 8, 0)
+public bool:NativePush(plugin, argc) {
 	enum { arg_id = 1, arg_auth, arg_password, arg_access, arg_flags, arg_prefix, arg_expired, arg_options };
+	CHECK_NATIVE_ARGS_NUM(argc, arg_options, false)
 	
 	clear_privilege();
 
@@ -561,7 +572,7 @@ public NativePush(plugin, argc) {
 		PrivilegesSnapshot = TrieSnapshotCreate(Privileges);
 	}
 
-	return 1;
+	return true;
 }
 
 public NativeGetSource(plugin, argc) {
@@ -581,14 +592,14 @@ public NativeGetFlags(plugin, argc) {
 }
 
 public NativeGetPassword(plugin, argc) {
-	CHECK_NATIVE_ARGS_NUM(argc, 2, 0)
 	enum { arg_dest = 1, arg_length };
+	CHECK_NATIVE_ARGS_NUM(argc, arg_length, 0)
 	return set_string(arg_dest, Privilege[PrivilegePassword], get_param(arg_length));
 }
 
 public NativeGetPrefix(plugin, argc) {
-	CHECK_NATIVE_ARGS_NUM(argc, 2, 0)
 	enum { arg_dest = 1, arg_length };
+	CHECK_NATIVE_ARGS_NUM(argc, arg_length, 0)
 	return set_string(arg_dest, Privilege[PrivilegePrefix], get_param(arg_length));
 }
 
@@ -600,16 +611,16 @@ public NativeGetOptions(plugin, argc) {
 	return Privilege[PrivilegeOptions];
 }
 
-public NativeSetAccess(plugin, argc) {
-	CHECK_NATIVE_ARGS_NUM(argc, 1, 0)
+public bool:NativeSetAccess(plugin, argc) {
 	enum { arg_access = 1 };
+	CHECK_NATIVE_ARGS_NUM(argc, arg_access, false)
 	Privilege[PrivilegeAccess] = get_param(arg_access);
-	return 1;
+	return true;
 }
 
 public CheckResult:NativeCheckPlayer(plugin, argc) {
-	CHECK_NATIVE_ARGS_NUM(argc, 1, CHECK_IGNORE)
 	enum { arg_player = 1 };
+	CHECK_NATIVE_ARGS_NUM(argc, arg_player, CHECK_IGNORE)
 	new player = get_param(arg_player);
 	CHECK_NATIVE_PLAYER(player, CHECK_IGNORE)
 
@@ -619,36 +630,36 @@ public CheckResult:NativeCheckPlayer(plugin, argc) {
 	return result;
 }
 
-public NativeIterReset(plugin, argc) {
+public bool:NativeIterReset(plugin, argc) {
 	PrivilegesIterate = 0;
-	return 1;
+	return true;
 }
 
 public bool:NativeIterEnded(plugin, argc) {
 	return bool:(PrivilegesIterate >= TrieSnapshotLength(PrivilegesSnapshot) - 1);
 }
 
-public NativeIterNext(plugin, argc) {
+public bool:NativeIterNext(plugin, argc) {
 	PrivilegesIterate++;
 	new key[MAX_KEY_LENGTH];
 	TrieSnapshotGetKey(PrivilegesSnapshot, PrivilegesIterate, key, charsmax(key));
 	TrieGetArray(Privileges, key, Privilege, sizeof Privilege);
-	return 1;
+	return true;
 }
 
 public NativeGetPlayerPrivilege(plugin, argc) {
-	CHECK_NATIVE_ARGS_NUM(argc, 1, 0)
 	enum { arg_player = 1 };
+	CHECK_NATIVE_ARGS_NUM(argc, arg_player, false)
 	new player = get_param(arg_player);
 	CHECK_NATIVE_PLAYER(player, 0)
 	
 	Privilege = UsersPrivilege[player];
-	return 1;
+	return true;
 }
 
 public NativeGetPlayerExpired(plugin, argc) {
-	CHECK_NATIVE_ARGS_NUM(argc, 1, -1)
 	enum { arg_player = 1 };
+	CHECK_NATIVE_ARGS_NUM(argc, arg_player, -1)
 	new player = get_param(arg_player);
 	CHECK_NATIVE_PLAYER(player, -1)
 	

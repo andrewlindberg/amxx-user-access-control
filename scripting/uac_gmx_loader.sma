@@ -32,6 +32,10 @@ new Array:Groups = Invalid_Array, GroupsNum, Group[GroupInfo];
 
 public plugin_init() {
 	register_plugin("[UAC] GM-X Loader", UAC_VERSION_STR, "GM-X Team");
+	GMX_RegisterCommand("group_changed", "OnReload");
+	GMX_RegisterCommand("group_removed", "OnReload");
+	GMX_RegisterCommand("privilege_changed", "OnReload");
+	GMX_RegisterCommand("privilege_removed", "OnReload");
 }
 
 public GMX_CfgLoaded() {
@@ -73,9 +77,18 @@ public OnResponse(const GmxResponseStatus:status, const GripJSONValue:data) {
 		return;
 	}
 
+	if (!data || grip_json_get_type(data) != GripJSONObject) {
+		UAC_FinishLoad();
+		return;
+	}
+
 	parseData(data);
 	GMX_CacheSave("privileges", data)
 	UAC_FinishLoad();
+}
+
+public OnReload() {
+	UAC_Reload();
 }
 
 bool:parseData(const GripJSONValue:data) {
