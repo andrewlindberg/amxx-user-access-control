@@ -495,7 +495,7 @@ public plugin_natives() {
 }
 
 public bool:NativeReload() {
-	if (Status == STATUS_LOADED) {
+	if (Status != STATUS_LOADED) {
 		return false;
 	}
 	TrieClear(Privileges);
