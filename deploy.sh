@@ -3,11 +3,11 @@
 version=$(git rev-list --no-merges --count HEAD)
 
 cat > scripting/include/uac_version.inc <<EOT
-#if defined _uax_version_included
+#if defined _uac_version_included
 	#endinput
 #endif
 
-#define _uax_version_included
+#define _uac_version_included
 
 #define UAC_MAJOR_VERSION       0
 #define UAC_MINOR_VERSION       1
