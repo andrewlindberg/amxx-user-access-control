@@ -1,7 +1,13 @@
 #include <amxmodx>
 #include <uac>
 
-#include <chatmanager>
+#tryinclude <chatmanager> // Download here https://dev-cs.ru/resources/112/
+#if !defined _chatmanager_included
+native cm_set_player_message(const new_message[]);
+native cm_set_prefix(const player, const prefix[]);
+native cm_get_prefix(const player, dest[], const length);
+native cm_reset_prefix(const player);
+#endif
 
 enum {
 	PREFIX_NONE,
@@ -42,8 +48,10 @@ setPrefix(const id) {
 		case PREFIX_CHANGE: {
 			new prefix[UAC_MAX_PREFIX_LENGTH];
 			UAC_GetPrefix(prefix, charsmax(prefix));
-			cm_set_prefix(id, fmt("^4[^3%s^4] ", prefix));
-			Prefix[id] = PREFIX_CHANGED;
+			if (prefix[0] != EOS) {
+				cm_set_prefix(id, fmt("^4[^3%s^4] ", prefix));
+				Prefix[id] = PREFIX_CHANGED;
+			}
 		}
 
 		case PREFIX_RESET: {

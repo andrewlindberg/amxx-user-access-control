@@ -1,8 +1,15 @@
 #include <amxmodx>
 #include <uac>
 
+new HashFile = 2;
+
 public plugin_init() {
 	register_plugin("[UAC] Users INI Loader", UAC_VERSION_STR, "GM-X Team");
+	bind_pcvar_num(create_cvar(
+		"aps_userini_hash", "2",
+		.has_min = true, .min_val = 0.0,
+		.has_max = true, .max_val = 2.0
+	), HashFile);
 }
 
 public UAC_Loading() {
@@ -55,9 +62,7 @@ public UAC_Loading() {
 		}
 
 		expiredTime = expired[0] != EOS && strcmp(expired, "0") != 0 ? parse_time(expired, "%d.%m.%Y") : 0;
-
-		new hashFile = 1;
-		if (hashFile == 1 || (hashFile == 2 && isMD5(password))) {
+		if (HashFile == 1 || (HashFile == 2 && isMD5(password))) {
 			options |= UAC_OPTIONS_MD5;
 		}
 
