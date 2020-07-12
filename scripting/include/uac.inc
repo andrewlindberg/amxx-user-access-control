@@ -4,6 +4,11 @@
 
 #define _uac_included
 
+#pragma reqlib UAC
+#if !defined AMXMODX_NOAUTOLOAD
+	#pragma loadlib UAC
+#endif
+
 #include <uac_consts>
 #include <uac_version>
 

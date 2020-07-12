@@ -473,6 +473,8 @@ printConsole(id, const msg[]) {
 
 // NATIVES
 public plugin_natives() {
+	register_library("UAC");
+
 	register_native("UAC_Reload", "NativeReload", 0);
 	register_native("UAC_Push", "NativePush", 0);
 	register_native("UAC_StartLoad", "NativeStartLoad", 0);
