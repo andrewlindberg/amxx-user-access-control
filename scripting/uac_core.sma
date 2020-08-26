@@ -408,26 +408,30 @@ CheckResult:checkUserFlags(const id, const name[] = "") {
 }
 
 CheckResult:setUserAccess(const id) {
+	if (get_systime(0) > Privilege[PrivilegeExpired]) {
+		return CHECK_DEFAULT;
+	}
+
 	if (Privilege[PrivilegeFlags] & FLAG_NOPASS) {
 		return CHECK_SUCCESS;
-	} else {
-		new password[UAC_MAX_PASSWORD_LENGTH];
-		if (Privilege[PrivilegeOptions] & UAC_OPTIONS_MD5) {
-			new infoPass[40];
-			get_user_info(id, PasswordField, infoPass, charsmax(infoPass));
-			hash_string(infoPass, Hash_Md5, password, charsmax(password));
-		} else {
-			get_user_info(id, PasswordField, password, charsmax(password));
-		}
+	}
 
-		if (strcmp(password, Privilege[PrivilegePassword]) == 0) {
-			return CHECK_SUCCESS;
-		} else if (Privilege[PrivilegeFlags] & FLAG_KICK) {
-			KickReason = "Invalid Password!";
-			return CHECK_KICK;
-		} else {
-			return CHECK_DEFAULT;
-		}
+	new password[UAC_MAX_PASSWORD_LENGTH];
+	if (Privilege[PrivilegeOptions] & UAC_OPTIONS_MD5) {
+		new infoPass[40];
+		get_user_info(id, PasswordField, infoPass, charsmax(infoPass));
+		hash_string(infoPass, Hash_Md5, password, charsmax(password));
+	} else {
+		get_user_info(id, PasswordField, password, charsmax(password));
+	}
+
+	if (strcmp(password, Privilege[PrivilegePassword]) == 0) {
+		return CHECK_SUCCESS;
+	} else if (Privilege[PrivilegeFlags] & FLAG_KICK) {
+		KickReason = "Invalid Password!";
+		return CHECK_KICK;
+	} else {
+		return CHECK_DEFAULT;
 	}
 }
 
@@ -549,6 +553,11 @@ public bool:NativeFinishLoad(plugin) {
 public bool:NativePush(plugin, argc) {
 	enum { arg_id = 1, arg_auth, arg_password, arg_access, arg_flags, arg_prefix, arg_expired, arg_options };
 	CHECK_NATIVE_ARGS_NUM(argc, arg_options, false)
+
+	new expired = get_param(arg_expired);
+	if (expired == 0 || expired >= get_systime(0)) {
+		return false;
+	}
 	
 	clear_privilege();
 
@@ -560,7 +569,7 @@ public bool:NativePush(plugin, argc) {
 	Privilege[PrivilegeAccess] = get_param(arg_access);
 	Privilege[PrivilegeFlags] = get_param(arg_flags);
 	get_string(arg_prefix, Privilege[PrivilegePrefix], charsmax(Privilege[PrivilegePrefix]));
-	Privilege[PrivilegeExpired] = get_param(arg_expired);
+	Privilege[PrivilegeExpired] = expired;
 	Privilege[PrivilegeOptions] = get_param(arg_options);
 
 	makeKey(auth, Privilege[PrivilegeFlags], key, charsmax(key));

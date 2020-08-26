@@ -135,7 +135,6 @@ parseGroups(const GripJSONValue:data) {
 }
 
 parsePrivileges(const GripJSONValue:data) {
-	new now = get_systime(0);
 	new id, auth[MAX_AUTHID_LENGTH], password[UAC_MAX_PASSWORD_LENGTH], access, flags, expired, prefix[UAC_MAX_PREFIX_LENGTH], options, authTypeStr[32];
 	for (new i = 0, n = grip_json_array_get_count(data), GripJSONValue:tmp, GripJSONValue:passwordValue, GripJSONValue:prefixValue; i < n; i++) {
 		tmp = grip_json_array_get_value(data, i);
@@ -199,7 +198,11 @@ parsePrivileges(const GripJSONValue:data) {
 			if (Group[GroupPriority] > priority) {
 				priority = Group[GroupPriority];
 				expiredVal = grip_json_object_get_value(privilege, "expired_at");
-				expired = grip_json_get_type(expiredVal) != GripJSONNull ? grip_json_get_number(expiredVal) : 0;
+				if (grip_json_get_type(expiredVal) != GripJSONNull) {
+					expired = grip_json_get_number(expiredVal) + GMX_GetServerTimeDiff();
+				} else {
+					expired = 0;
+				}
 				grip_destroy_json_value(expiredVal);
 
 				if (prefix[0] == EOS) {
@@ -210,9 +213,7 @@ parsePrivileges(const GripJSONValue:data) {
 		}
 		grip_destroy_json_value(privileges);
 
-		if (expired == 0 || expired >= now) {
-			UAC_Push(id, auth, password, access, flags, prefix, expired, options);
-		}
+		UAC_Push(id, auth, password, access, flags, prefix, expired, options);
 
 		grip_destroy_json_value(tmp);
 	}
