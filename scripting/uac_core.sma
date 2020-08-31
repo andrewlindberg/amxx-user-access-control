@@ -1,4 +1,4 @@
-#pragma semicolon 1
+// #pragma semicolon 1
 
 #define CHANGE_NICK_HOOK 2 // 0 - amxmodx, 1 - fakemeta, 2 - reapi
 
@@ -408,7 +408,7 @@ CheckResult:checkUserFlags(const id, const name[] = "") {
 }
 
 CheckResult:setUserAccess(const id) {
-	if (get_systime(0) > Privilege[PrivilegeExpired]) {
+	if (Privilege[PrivilegeExpired] != 0 && get_systime(0) > Privilege[PrivilegeExpired]) {
 		return CHECK_DEFAULT;
 	}
 
@@ -427,12 +427,14 @@ CheckResult:setUserAccess(const id) {
 
 	if (strcmp(password, Privilege[PrivilegePassword]) == 0) {
 		return CHECK_SUCCESS;
-	} else if (Privilege[PrivilegeFlags] & FLAG_KICK) {
+	}
+
+	if (Privilege[PrivilegeFlags] & FLAG_KICK) {
 		KickReason = "Invalid Password!";
 		return CHECK_KICK;
-	} else {
-		return CHECK_DEFAULT;
 	}
+
+	return CHECK_DEFAULT;
 }
 
 makeKey(const auth[], const flags, key[], len) {
