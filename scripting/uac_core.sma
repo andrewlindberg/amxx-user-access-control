@@ -555,7 +555,7 @@ public bool:NativePush(plugin, argc) {
 	CHECK_NATIVE_ARGS_NUM(argc, arg_options, false)
 
 	new expired = get_param(arg_expired);
-	if (expired == 0 || expired >= get_systime(0)) {
+	if (expired != 0 && expired < get_systime(0)) {
 		return false;
 	}
 	
